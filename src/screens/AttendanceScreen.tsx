@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
+import * as Location from 'expo-location';
 import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { colors, fonts, radius, space } from '../theme';
 import { ListCard } from '../components/ListCard';
@@ -11,6 +12,7 @@ import { useApp } from '../store';
 import { db } from '../lib/firebase';
 import { todayYMD, monthYM } from '../lib/constants';
 import { effectiveBranchOnDate } from '../lib/calculations';
+import { haversineMeters, DEFAULT_GEOFENCE_M } from '../lib/geo';
 
 interface Att { id: string; date: string; status: string; marked_at?: string; branch_id?: string }
 
@@ -47,11 +49,28 @@ export const AttendanceScreen: React.FC = () => {
   const todayRec = records.find(r => r.date === today);
   const monthDays = useMemo(() => records.filter(r => r.date.startsWith(monthStr) && r.status === 'present').length, [records, monthStr]);
 
+  const b: any = branch;
+  const geoConfigured = b && Number.isFinite(b.lat) && Number.isFinite(b.lng);
+  const radiusM = (b?.geofence_radius as number) || DEFAULT_GEOFENCE_M;
+
   const markPresent = async () => {
     if (!me) { setToast({ tone: 'red', text: 'No linked staff' }); return; }
     if (todayRec) return;
     setBusy(true);
     try {
+      let coords: { lat: number; lng: number } | null = null;
+      // Geo-fence: only when the shop has coordinates configured.
+      if (geoConfigured) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') { setToast({ tone: 'red', text: 'Location permission needed to mark present' }); setBusy(false); return; }
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        const dist = haversineMeters(pos.coords.latitude, pos.coords.longitude, b.lat, b.lng);
+        if (dist > radiusM) {
+          setToast({ tone: 'red', text: `Too far — ${Math.round(dist)} m from ${branch?.name || 'shop'} (limit ${radiusM} m)` });
+          setBusy(false); return;
+        }
+        coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      }
       await setDoc(doc(db, 'attendance', `${me.id}_${today}`), {
         staff_id: me.id,
         staff_name: me.name,
@@ -59,8 +78,9 @@ export const AttendanceScreen: React.FC = () => {
         date: today,
         status: 'present',
         marked_at: new Date().toISOString(),
+        ...(coords ? { lat: coords.lat, lng: coords.lng, geo_verified: true } : { geo_verified: false }),
       });
-      setToast({ tone: 'green', text: 'Marked present' });
+      setToast({ tone: 'green', text: geoConfigured ? 'Present · location verified' : 'Marked present' });
       await load();
     } catch { setToast({ tone: 'red', text: 'Failed to mark' }); }
     finally { setBusy(false); }
@@ -99,8 +119,10 @@ export const AttendanceScreen: React.FC = () => {
         <StatCard label="Total Logged" value={String(records.length)} tone="neutral" />
       </View>
 
-      <Text style={{ fontFamily: fonts.sansMedium, fontSize: 10, color: colors.text4 }}>
-        Location check-in (geo-fence) coming soon.
+      <Text style={{ fontFamily: fonts.sansMedium, fontSize: 10, color: geoConfigured ? colors.green : colors.text4 }}>
+        {geoConfigured
+          ? `Location-verified check-in · must be within ${radiusM} m of ${branch?.name || 'the shop'}.`
+          : 'This shop has no GPS set yet — ask admin to set it for location-verified check-in.'}
       </Text>
 
       <Text style={{ fontFamily: fonts.sansBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: colors.text3 }}>Recent</Text>

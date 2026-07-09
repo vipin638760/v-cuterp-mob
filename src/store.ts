@@ -11,6 +11,7 @@ export type Screen =
   | 'leaderboard'
   | 'attendance'
   | 'request-advance'
+  | 'branch-location'
   | 'pos'
   | 'entry'
   | 'pl'
@@ -143,7 +144,7 @@ export const NAV_BY_ROLE: Record<Role, Screen[]> = {
   admin: [
     'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
     'staff', 'staff-performance', 'leaderboard', 'daily-expenses', 'op-expenses',
-    'pl', 'leaves', 'payroll', 'taskpedia', 'master-setup',
+    'pl', 'leaves', 'payroll', 'taskpedia', 'branch-location', 'master-setup',
   ],
   accountant: [
     'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
@@ -162,6 +163,7 @@ export const SCREEN_TITLES: Record<Screen, string> = {
   leaderboard: 'Leaderboard',
   attendance: 'Attendance',
   'request-advance': 'Request Advance',
+  'branch-location': 'Branch Location (GPS)',
   pos: 'POS Terminal',
   entry: 'Daily Business Entry',
   pl: 'P&L Analytics',

@@ -19,7 +19,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0806"
       },
-      "permissions": ["INTERNET"]
+      "permissions": ["INTERNET", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "ios": {
       "bundleIdentifier": "com.vcut.luxe",
@@ -30,7 +30,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "V-Cut uses your location to confirm you are at the shop when marking attendance."
+        }
+      ]
     ]
   }
 }

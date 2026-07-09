@@ -7,7 +7,8 @@ import { Pill } from '../components/Pill';
 import { Icon } from '../components/Icon';
 import { useApp } from '../store';
 import { todayYMD } from '../lib/constants';
-import { computeCashInHand, effectiveBranchOnDate } from '../lib/calculations';
+import { computeCashInHand, effectiveBranchOnDate, staffStatusForMonth } from '../lib/calculations';
+import { monthYM } from '../lib/constants';
 
 export const DashboardScreen: React.FC = () => {
   const user = useApp(s => s.user)!;
@@ -49,13 +50,18 @@ export const DashboardScreen: React.FC = () => {
     }, 0);
   }, [entries, today, branchScope, branches, staff]);
 
+  // Match the web ERP's "Service Force": staff active in the current month
+  // (staffStatusForMonth), scoped to the role's branches. The old filter
+  // dropped anyone whose effective-branch mapping resolved to null.
   const onDuty = useMemo(() => {
+    const monthPrefix = monthYM();
     return staff.filter(st => {
-      if (st.exit_date && st.exit_date < today) return false;
-      const eff = effectiveBranchOnDate(st, today, transfers);
-      return eff && branchScope.includes(eff);
+      if (staffStatusForMonth(st, monthPrefix).status === 'inactive') return false;
+      if (allowed) return true;
+      const eff = effectiveBranchOnDate(st, today, transfers) || st.branch_id;
+      return !!eff && branchScope.includes(eff);
     }).length;
-  }, [staff, transfers, today, branchScope]);
+  }, [staff, transfers, today, branchScope, allowed]);
 
   const customersToday = useMemo(() => {
     const ids = new Set(todayInvoices.map((i: any) => i.customer_id).filter(Boolean));

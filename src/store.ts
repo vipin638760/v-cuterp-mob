@@ -7,6 +7,7 @@ export type Screen =
   | 'pulse'
   | 'branch-detail'
   | 'staff-detail'
+  | 'leaderboard'
   | 'pos'
   | 'entry'
   | 'pl'
@@ -138,12 +139,12 @@ export const currentScreen = (s: AppState): Screen => s.history[s.history.length
 export const NAV_BY_ROLE: Record<Role, Screen[]> = {
   admin: [
     'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
-    'menu-config', 'staff', 'materials', 'material-master', 'daily-expenses', 'op-expenses',
+    'menu-config', 'staff', 'leaderboard', 'materials', 'material-master', 'daily-expenses', 'op-expenses',
     'pl', 'leaves', 'payroll', 'taskpedia', 'master-setup',
   ],
   accountant: [
     'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
-    'menu-config', 'staff', 'materials', 'daily-expenses', 'leaves', 'payroll', 'taskpedia',
+    'menu-config', 'staff', 'leaderboard', 'materials', 'daily-expenses', 'leaves', 'payroll', 'taskpedia',
   ],
   employee: ['dashboard', 'day-working', 'my-target', 'my-payroll', 'apply-leave'],
 };
@@ -154,6 +155,7 @@ export const SCREEN_TITLES: Record<Screen, string> = {
   pulse: 'Organisation Pulse',
   'branch-detail': 'Branch Insight',
   'staff-detail': 'Staff Performance',
+  leaderboard: 'Leaderboard',
   pos: 'POS Terminal',
   entry: 'Daily Business Entry',
   pl: 'P&L Analytics',

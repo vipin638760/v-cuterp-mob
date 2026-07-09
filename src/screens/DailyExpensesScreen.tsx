@@ -32,12 +32,17 @@ export const DailyExpensesScreen: React.FC = () => {
       return;
     }
     try {
+      // Real `daily_expenses` docs key the category as `expense_type`.
+      const branchName = branches.find(b => b.id === branchId)?.name || '';
       await addDoc(collection(db, 'daily_expenses'), {
         branch_id: branchId,
+        branch_name: branchName,
         date,
-        category: category.trim(),
+        expense_type: category.trim(),
         amount: Number(amount) || 0,
         note: note.trim(),
+        created_by: user.id,
+        created_at: new Date().toISOString(),
       });
       setCategory(''); setAmount(''); setNote('');
       setToast({ tone: 'green', text: 'Added' });
@@ -64,7 +69,7 @@ export const DailyExpensesScreen: React.FC = () => {
             <ListCard key={e.id}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.text, fontSize: 13 }}>{e.category}</Text>
+                  <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.text, fontSize: 13 }}>{(e as any).expense_type || (e as any).category}</Text>
                   {!!e.note && <Text style={{ fontFamily: fonts.sansMedium, color: colors.text3, fontSize: 11 }}>{e.note}</Text>}
                 </View>
                 <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 14 }}>{INR(e.amount)}</Text>

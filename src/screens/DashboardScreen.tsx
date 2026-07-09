@@ -120,7 +120,7 @@ export const DashboardScreen: React.FC = () => {
                         {inv.invoice_no || (inv.walkin_no ? `Walk-in #${String(inv.walkin_no).padStart(3, '0')}` : 'Bill')}
                       </Text>
                       <Text style={{ fontFamily: fonts.sansMedium, color: colors.text3, fontSize: 11, marginTop: 2 }}>
-                        {branch?.name || inv.branch_id} · {(inv.payment_mode || 'cash').toUpperCase()}
+                        {branch?.name || inv.branch_id} · {(Number(inv.online) || 0) > 0 && (Number(inv.cash) || 0) > 0 ? 'SPLIT' : (Number(inv.online) || 0) > 0 ? 'ONLINE' : 'CASH'}
                       </Text>
                     </View>
                     <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 16 }}>

@@ -17,6 +17,15 @@ export const currentPeriod = (): Period => {
   return { mode: 'month', year: d.getFullYear(), month: d.getMonth() + 1 };
 };
 
+// Month prefixes covered by a period: [YYYY-MM] for month mode; Jan..current
+// (or Jan..Dec for a past year) for year mode.
+export const periodMonths = (p: Period): string[] => {
+  if (p.mode === 'month') return [periodPrefix(p)];
+  const d = new Date();
+  const last = p.year < d.getFullYear() ? 12 : d.getMonth() + 1;
+  return Array.from({ length: last }, (_, i) => `${p.year}-${String(i + 1).padStart(2, '0')}`);
+};
+
 const Toggle: React.FC<{ on: boolean; label: string; onPress: () => void }> = ({ on, label, onPress }) => (
   <Pressable onPress={onPress} style={{
     flex: 1, paddingVertical: 8, borderRadius: radius.sm, alignItems: 'center',

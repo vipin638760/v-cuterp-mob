@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, View, Pressable } from 'react-native';
 import { colors, fonts, INR, radius, space } from '../theme';
 import { Pill } from '../components/Pill';
 import { Icon } from '../components/Icon';
+import { PeriodBar, Period, periodMonths, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { monthYM } from '../lib/constants';
-import { branchFinancials } from '../lib/calculations';
+import { branchFinancialsForMonths } from '../lib/calculations';
 
 export const BranchesScreen: React.FC = () => {
   const branches = useApp(s => s.branches);
@@ -17,17 +17,19 @@ export const BranchesScreen: React.FC = () => {
   const leaves = useApp(s => s.leaves);
   const setSelectedBranch = useApp(s => s.setSelectedBranch);
   const push = useApp(s => s.push);
-  const monthStr = monthYM();
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const months = useMemo(() => periodMonths(period), [period]);
 
   const rows = useMemo(() => branches.map(b => {
-    const { revenue, net } = branchFinancials(b, monthStr, entries, expenses, monthlyExpenses, staff, settings, leaves);
+    const { revenue, net } = branchFinancialsForMonths(b, months, entries, expenses, monthlyExpenses, staff, settings, leaves);
     return { branch: b, revenue, n: net };
-  }).sort((a, b) => b.n - a.n), [branches, staff, entries, expenses, monthlyExpenses, settings, leaves, monthStr]);
+  }).sort((a, b) => b.n - a.n), [branches, staff, entries, expenses, monthlyExpenses, settings, leaves, months]);
 
   const go = (id: string) => { setSelectedBranch(id); push('branch-detail'); };
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.md, paddingBottom: 80 }}>
+      <PeriodBar value={period} onChange={setPeriod} />
       {rows.map(({ branch: b, revenue, n }) => (
         <Pressable key={b.id} onPress={() => go(b.id)} style={{
           backgroundColor: colors.bg2,

@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { colors, fonts, INR, space } from '../theme';
 import { ListCard } from '../components/ListCard';
 import { Pill } from '../components/Pill';
+import { PeriodBar, Period, periodPrefix, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { monthYM } from '../lib/constants';
 import { staffBillingInPeriod, staffIncentivesInPeriod } from '../lib/calculations';
 
 export const IncentiveScreen: React.FC = () => {
@@ -12,19 +12,21 @@ export const IncentiveScreen: React.FC = () => {
   const branches = useApp(s => s.branches);
   const entries = useApp(s => s.entries);
   const settings = useApp(s => s.settings);
-  const monthStr = monthYM();
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const prefix = periodPrefix(period);
 
   const rows = useMemo(() => staff.map(st => {
-    const billing = staffBillingInPeriod(st.id, entries, monthStr);
-    const incentive = staffIncentivesInPeriod(st.id, entries, monthStr);
+    const billing = staffBillingInPeriod(st.id, entries, prefix);
+    const incentive = staffIncentivesInPeriod(st.id, entries, prefix);
     const branch = branches.find(b => b.id === st.branch_id);
     const target = branch?.type === 'unisex' ? (settings.unisex_target || 0) : (settings.mens_target || 0);
     const pct = target > 0 ? Math.round((billing / target) * 100) : 0;
     return { st, billing, incentive, target, pct };
-  }).sort((a, b) => b.billing - a.billing), [staff, branches, entries, settings, monthStr]);
+  }).sort((a, b) => b.billing - a.billing), [staff, branches, entries, settings, prefix]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.sm, paddingBottom: 80 }}>
+      <PeriodBar value={period} onChange={setPeriod} />
       {rows.map(({ st, billing, incentive, target, pct }) => (
         <ListCard key={st.id}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>

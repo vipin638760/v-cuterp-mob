@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { colors, fonts, INR, space } from '../theme';
 import { ListCard } from '../components/ListCard';
 import { Pill } from '../components/Pill';
+import { PeriodBar, Period, periodPrefix, periodLabel, periodMonths, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { monthYM } from '../lib/constants';
 import { proRataSalary, staffAdvancesInMonth, staffIncentivesInPeriod } from '../lib/calculations';
 
 export const PayrollScreen: React.FC = () => {
@@ -14,22 +14,28 @@ export const PayrollScreen: React.FC = () => {
   const advances = useApp(s => s.advances);
   const leaves = useApp(s => s.leaves);
   const settings = useApp(s => s.settings);
-  const monthStr = monthYM();
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const prefix = periodPrefix(period);
+  const months = useMemo(() => periodMonths(period), [period]);
 
   const rows = useMemo(() => staff
-    .filter(st => !st.exit_date || st.exit_date >= monthStr + '-01')
+    .filter(st => !st.exit_date || st.exit_date >= months[0] + '-01')
     .map(st => {
-      const salary = proRataSalary(st, monthStr, branches, settings, leaves);
-      const incentive = staffIncentivesInPeriod(st.id, entries, monthStr);
-      const advance = staffAdvancesInMonth(st.id, monthStr, advances);
+      let salary = 0, advance = 0;
+      months.forEach(mp => {
+        salary += proRataSalary(st, mp, branches, settings, leaves);
+        advance += staffAdvancesInMonth(st.id, mp, advances);
+      });
+      const incentive = staffIncentivesInPeriod(st.id, entries, prefix);
       const net = salary + incentive - advance;
       return { st, salary, incentive, advance, net };
-    }), [staff, branches, entries, advances, leaves, settings, monthStr]);
+    }), [staff, branches, entries, advances, leaves, settings, prefix, months]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.sm, paddingBottom: 80 }}>
+      <PeriodBar value={period} onChange={setPeriod} />
       <Text style={{ fontFamily: fonts.sansBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: colors.text3, marginBottom: 4 }}>
-        Payroll · {monthStr}
+        Payroll · {periodLabel(period)}
       </Text>
       {rows.map(({ st, salary, incentive, advance, net }) => (
         <ListCard key={st.id}>

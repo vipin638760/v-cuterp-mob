@@ -38,6 +38,27 @@ export function branchFinancials(
   return { revenue, fixed, variable, gst, salary, net };
 }
 
+// Sum branchFinancials across several month prefixes (year-mode periods).
+export function branchFinancialsForMonths(
+  b: Branch,
+  months: string[],
+  entries: DailyEntry[],
+  expenses: ExpenseEntry[],
+  monthlyExpenses: MonthlyExpense[],
+  staff: Staff[],
+  settings: GlobalSettings,
+  leaves: Leave[],
+  includeSalary = true,
+): BranchFinancials {
+  return months.reduce<BranchFinancials>((acc, mp) => {
+    const f = branchFinancials(b, mp, entries, expenses, monthlyExpenses, staff, settings, leaves, includeSalary);
+    return {
+      revenue: acc.revenue + f.revenue, fixed: acc.fixed + f.fixed, variable: acc.variable + f.variable,
+      gst: acc.gst + f.gst, salary: acc.salary + f.salary, net: acc.net + f.net,
+    };
+  }, { revenue: 0, fixed: 0, variable: 0, gst: 0, salary: 0, net: 0 });
+}
+
 export function getMonthlyFixed(branch: Branch | null | undefined, monthStr: string, monthlyExpenses: MonthlyExpense[] = []) {
   const b: any = branch || {};
   const rec = monthlyExpenses.find(m => m.branch_id === b.id && m.month === monthStr);

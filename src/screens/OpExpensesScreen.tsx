@@ -3,8 +3,8 @@ import { ScrollView, Text, View } from 'react-native';
 import { colors, fonts, INR, space } from '../theme';
 import { ListCard } from '../components/ListCard';
 import { ChipGroup } from '../components/ChipGroup';
+import { PeriodBar, Period, periodPrefix, periodMonths, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { monthYM } from '../lib/constants';
 import { getMonthlyFixed, proRataSalary } from '../lib/calculations';
 
 export const OpExpensesScreen: React.FC = () => {
@@ -18,22 +18,26 @@ export const OpExpensesScreen: React.FC = () => {
   const isAdmin = user.role === 'admin';
 
   const [tab, setTab] = useState<'fixed' | 'variable' | 'total'>('fixed');
-  const monthStr = monthYM();
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const prefix = periodPrefix(period);
+  const months = useMemo(() => periodMonths(period), [period]);
 
   const rows = useMemo(() => branches.map(b => {
-    const fx = getMonthlyFixed(b, monthStr, monthlyExpenses);
-    const fixed = Object.values(fx).reduce((s, v) => s + (v || 0), 0);
+    let fixed = 0, salary = 0;
+    months.forEach(mp => {
+      const fx = getMonthlyFixed(b, mp, monthlyExpenses);
+      fixed += Object.values(fx).reduce((s, v) => s + (v || 0), 0);
+      salary += staff.filter(st => st.branch_id === b.id).reduce((s, st) => s + proRataSalary(st, mp, branches, settings, leaves), 0);
+    });
     const variable = expenses
-      .filter(e => e.branch_id === b.id && e.date && e.date.startsWith(monthStr))
+      .filter(e => e.branch_id === b.id && e.date && e.date.startsWith(prefix))
       .reduce((s, e) => s + (Number(e.amount) || 0), 0);
-    const salary = staff
-      .filter(st => st.branch_id === b.id)
-      .reduce((s, st) => s + proRataSalary(st, monthStr, branches, settings, leaves), 0);
     return { b, fixed, variable, salary };
-  }), [branches, expenses, monthlyExpenses, staff, monthStr, settings, leaves]);
+  }), [branches, expenses, monthlyExpenses, staff, prefix, months, settings, leaves]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.md, paddingBottom: 80 }}>
+      <PeriodBar value={period} onChange={setPeriod} />
       <ChipGroup
         items={[{ id: 'fixed', label: 'Fixed' }, { id: 'variable', label: 'Variable' }, { id: 'total', label: 'Total' }]}
         active={tab}

@@ -3,9 +3,8 @@ import { ScrollView, Text, View } from 'react-native';
 import { colors, fonts, INR, space } from '../theme';
 import { StatCard } from '../components/StatCard';
 import { ListCard } from '../components/ListCard';
-import { ChipGroup } from '../components/ChipGroup';
+import { PeriodBar, Period, periodPrefix, periodMonths, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { monthYM } from '../lib/constants';
 import { branchIncomeInPeriod, getMonthlyFixed } from '../lib/calculations';
 
 export const PLScreen: React.FC = () => {
@@ -15,26 +14,21 @@ export const PLScreen: React.FC = () => {
   const monthlyExpenses = useApp(s => s.monthlyExpenses);
   const settings = useApp(s => s.settings);
 
-  const [scope, setScope] = useState<'today' | 'week' | 'month'>('month');
-  const today = new Date();
-  const monthStr = monthYM(today);
-
-  const prefix = useMemo(() => {
-    if (scope === 'today') return today.toISOString().slice(0, 10);
-    if (scope === 'week') return monthStr;
-    return monthStr;
-  }, [scope]);
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const prefix = periodPrefix(period);
+  const months = useMemo(() => periodMonths(period), [period]);
 
   const totals = useMemo(() => {
     let revenue = 0;
-    let variable = 0;
     let fixed = 0;
     branches.forEach(b => {
       revenue += branchIncomeInPeriod(b.id, entries, prefix);
-      const fx = getMonthlyFixed(b, monthStr, monthlyExpenses);
-      fixed += Object.values(fx).reduce((s, v) => s + (v || 0), 0);
+      months.forEach(mp => {
+        const fx = getMonthlyFixed(b, mp, monthlyExpenses);
+        fixed += Object.values(fx).reduce((s, v) => s + (v || 0), 0);
+      });
     });
-    variable = expenses
+    const variable = expenses
       .filter(e => e.date && e.date.startsWith(prefix))
       .reduce((s, e) => s + (Number(e.amount) || 0), 0);
     const onlinePart = entries
@@ -43,15 +37,11 @@ export const PLScreen: React.FC = () => {
     const gst = Math.round(onlinePart * (settings.gst_pct || 0) / 100);
     const net = revenue - variable - fixed - gst;
     return { revenue, variable, fixed, gst, net };
-  }, [branches, entries, expenses, monthlyExpenses, prefix, monthStr, settings.gst_pct]);
+  }, [branches, entries, expenses, monthlyExpenses, prefix, months, settings.gst_pct]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.md, paddingBottom: 80 }}>
-      <ChipGroup
-        items={[{ id: 'today', label: 'Today' }, { id: 'week', label: 'Week' }, { id: 'month', label: 'Month' }]}
-        active={scope}
-        onChange={(s) => setScope(s as any)}
-      />
+      <PeriodBar value={period} onChange={setPeriod} />
 
       <View>
         <Text style={{ fontFamily: fonts.sansBold, fontSize: 9, letterSpacing: 2.4, textTransform: 'uppercase', color: colors.text3 }}>Gross Revenue</Text>

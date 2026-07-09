@@ -106,6 +106,9 @@ export const LoginScreen: React.FC = () => {
           <Text style={{ fontFamily: fonts.sansBold, fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: colors.text3, marginTop: 4 }}>
             Luxe Salon ERP
           </Text>
+          <Text style={{ fontFamily: fonts.sansMedium, fontSize: 9, letterSpacing: 1, color: colors.text4, marginTop: 2 }}>
+            build diag-4
+          </Text>
         </View>
 
         <View style={{

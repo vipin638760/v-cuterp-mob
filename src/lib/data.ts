@@ -34,7 +34,15 @@ export const useFirestoreSubscriptions = (enabled: boolean): void => {
     // --- temporary on-device diagnostics (no cable available) ---
     const counts: Record<string, number> = {};
     let firstError = '';
+    let anyResponse = false;
     let summaryTimer: ReturnType<typeof setTimeout> | null = null;
+    // Hard fallback: if NOTHING (no snapshot, no error) comes back, listeners
+    // are hanging — the classic RN stream-transport failure.
+    const hangTimer = setTimeout(() => {
+      if (!anyResponse && !firstError) {
+        set.setToast({ tone: 'red', text: 'No Firestore response — listeners hung (transport)' });
+      }
+    }, 7000);
     const scheduleSummary = () => {
       if (summaryTimer) clearTimeout(summaryTimer);
       summaryTimer = setTimeout(() => {
@@ -50,6 +58,8 @@ export const useFirestoreSubscriptions = (enabled: boolean): void => {
       }, 3000);
     };
     const onErr = (name: string) => (e: any) => {
+      anyResponse = true;
+      clearTimeout(hangTimer);
       const code = e?.code || e?.message || 'error';
       if (!firstError) {
         firstError = `${name}: ${code}`;
@@ -60,6 +70,8 @@ export const useFirestoreSubscriptions = (enabled: boolean): void => {
     SIMPLE_COLLECTIONS.forEach(name => {
       const q = query(collection(db, name));
       const u = onSnapshot(q, snap => {
+        anyResponse = true;
+        clearTimeout(hangTimer);
         const arr: any[] = [];
         snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
         counts[name] = arr.length;
@@ -74,6 +86,6 @@ export const useFirestoreSubscriptions = (enabled: boolean): void => {
     }, onErr('settings/global'));
     unsubs.push(sg);
 
-    return () => { if (summaryTimer) clearTimeout(summaryTimer); unsubs.forEach(u => u()); };
+    return () => { clearTimeout(hangTimer); if (summaryTimer) clearTimeout(summaryTimer); unsubs.forEach(u => u()); };
   }, [enabled]);
 };

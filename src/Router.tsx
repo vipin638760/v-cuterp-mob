@@ -8,6 +8,7 @@ import { OrgPulseScreen } from './screens/OrgPulseScreen';
 import { BranchDetailScreen } from './screens/BranchDetailScreen';
 import { StaffDetailScreen } from './screens/StaffDetailScreen';
 import { LeaderboardScreen } from './screens/LeaderboardScreen';
+import { StaffPerformanceScreen } from './screens/StaffPerformanceScreen';
 import { PosScreen } from './screens/PosScreen';
 import { EntryScreen } from './screens/EntryScreen';
 import { PLScreen } from './screens/PLScreen';
@@ -38,6 +39,7 @@ const screenComponent = (s: Screen): React.ReactNode => {
     case 'branch-detail': return <BranchDetailScreen />;
     case 'staff-detail': return <StaffDetailScreen />;
     case 'leaderboard': return <LeaderboardScreen />;
+    case 'staff-performance': return <StaffPerformanceScreen />;
     case 'pos': return <PosScreen />;
     case 'entry': return <EntryScreen />;
     case 'pl': return <PLScreen />;

@@ -54,15 +54,27 @@ export const LoginScreen: React.FC = () => {
 
   const submit = async () => {
     setLoading(true);
-    const trimmed = name.trim();
+    // Mirror the web ERP auth (src/app/page.js): match by User ID (name accepted
+    // too for convenience), case-insensitive role, trimmed password.
+    const key = name.trim().toLowerCase();
+    const pass = password.trim();
+    const matchesId = (x: User) =>
+      (x.id || '').toLowerCase().trim() === key ||
+      (x.name || '').toLowerCase().trim() === key;
     const u = users.find(x =>
-      x.role === tab &&
-      x.name.toLowerCase() === trimmed.toLowerCase() &&
-      (x.password || '') === password
+      (x.role || '').toLowerCase().trim() === tab &&
+      matchesId(x) &&
+      (x.password || '').trim() === pass
     );
     if (!u) {
       setLoading(false);
-      setToast({ tone: 'red', text: 'Invalid credentials' });
+      const byId = users.find(matchesId);
+      const msg = !byId
+        ? 'No user with that ID'
+        : (byId.password || '').trim() !== pass
+          ? 'Incorrect password'
+          : `Role mismatch — that user is ${byId.role}`;
+      setToast({ tone: 'red', text: msg });
       return;
     }
     await saveSession(u);
@@ -130,12 +142,12 @@ export const LoginScreen: React.FC = () => {
 
         <View style={{ gap: 16 }}>
           <TextField
-            label="Name"
+            label="User ID"
             value={name}
             onChangeText={setName}
-            autoCapitalize="words"
+            autoCapitalize="none"
             autoCorrect={false}
-            placeholder="Enter your name"
+            placeholder="Enter your User ID"
           />
           <TextField
             label="Password"

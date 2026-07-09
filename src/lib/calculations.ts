@@ -199,11 +199,14 @@ export function staffIncentivesInPeriod(sid: string, entries: DailyEntry[], filt
   return inc;
 }
 
+// Branch collection = online + cash + material sale (sum of staff_billing[].material),
+// matching the web ERP's cumulativeCollection/monthCollection. Entry docs store
+// flat `online`/`cash` fields — NOT a nested `income` object.
 export function branchIncomeInPeriod(bid: string, entries: DailyEntry[], filterPrefix: string): number {
   return entries.filter(e => e.date && e.branch_id === bid && e.date.startsWith(filterPrefix))
     .reduce((s, e) => {
-      const inc = e.income || { cash: 0, upi: 0, card: 0 };
-      return s + (inc.cash || 0) + (inc.upi || 0) + (inc.card || 0);
+      const matSale = (e.staff_billing || []).reduce((m: number, sb: any) => m + (Number(sb.material) || 0), 0);
+      return s + (Number((e as any).online) || 0) + (Number(e.cash) || 0) + matSale;
     }, 0);
 }
 

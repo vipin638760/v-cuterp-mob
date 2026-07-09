@@ -39,7 +39,7 @@ export const PLScreen: React.FC = () => {
       .reduce((s, e) => s + (Number(e.amount) || 0), 0);
     const onlinePart = entries
       .filter(e => e.date && e.date.startsWith(prefix))
-      .reduce((s, e) => s + ((e.upi || 0) + (e.card || 0)), 0);
+      .reduce((s, e) => s + (Number((e as any).online) || 0), 0);
     const gst = Math.round(onlinePart * (settings.gst_pct || 0) / 100);
     const net = revenue - variable - fixed - gst;
     return { revenue, variable, fixed, gst, net };

@@ -25,7 +25,7 @@ export const BranchesScreen: React.FC = () => {
       .reduce((s, e) => s + (Number(e.amount) || 0), 0);
     const onlinePart = entries
       .filter(e => e.branch_id === b.id && e.date && e.date.startsWith(monthStr))
-      .reduce((s, e) => s + ((e.upi || 0) + (e.card || 0)), 0);
+      .reduce((s, e) => s + (Number((e as any).online) || 0), 0);
     const gst = Math.round(onlinePart * (settings.gst_pct || 0) / 100);
     const n = revenue - variable - fixed - gst;
     return { branch: b, revenue, n };

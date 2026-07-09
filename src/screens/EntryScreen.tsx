@@ -66,13 +66,19 @@ export const EntryScreen: React.FC = () => {
 
   const save = async () => {
     try {
+      // Write the web ERP's canonical flat schema: `online` (UPI + card),
+      // `cash`, `mat_expense`. Entry docs do NOT use a nested `income` object.
+      const f: any = form;
       const payload = {
         ...form,
         branch_id: branchId,
         date,
         cash_in_hand: expectedCash,
-        income: { cash: form.cash || 0, upi: form.upi || 0, card: form.card || 0 },
+        online: (Number(f.upi) || 0) + (Number(f.card) || 0),
+        cash: Number(f.cash) || 0,
+        mat_expense: Number(f.material_expense) || 0,
       };
+      delete (payload as any).income;
       if (existing?.id) {
         await updateDoc(doc(db, 'entries', existing.id), payload as any);
       } else {

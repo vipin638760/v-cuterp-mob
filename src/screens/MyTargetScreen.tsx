@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { colors, fonts, INR, space } from '../theme';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { Pill } from '../components/Pill';
+import { PeriodBar, Period, periodPrefix, periodMonths, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { monthYM } from '../lib/constants';
 import { staffBillingInPeriod, staffIncentivesInPeriod } from '../lib/calculations';
 
 export const MyTargetScreen: React.FC = () => {
@@ -17,16 +17,20 @@ export const MyTargetScreen: React.FC = () => {
 
   const me = staff.find(s => s.id === user.staff_id);
   const branch = branches.find(b => b.id === me?.branch_id);
-  const monthStr = monthYM();
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const prefix = periodPrefix(period);
+  const nMonths = useMemo(() => periodMonths(period).length, [period]);
 
-  const target = branch?.type === 'unisex' ? (settings.unisex_target || 0) : (settings.mens_target || 0);
-  const billing = useMemo(() => me ? staffBillingInPeriod(me.id, entries, monthStr) : 0, [me, entries, monthStr]);
-  const incentive = useMemo(() => me ? staffIncentivesInPeriod(me.id, entries, monthStr) : 0, [me, entries, monthStr]);
+  const monthlyTarget = branch?.type === 'unisex' ? (settings.unisex_target || 0) : (settings.mens_target || 0);
+  const target = monthlyTarget * nMonths; // scale target for year periods
+  const billing = useMemo(() => me ? staffBillingInPeriod(me.id, entries, prefix) : 0, [me, entries, prefix]);
+  const incentive = useMemo(() => me ? staffIncentivesInPeriod(me.id, entries, prefix) : 0, [me, entries, prefix]);
   const pct = target > 0 ? Math.round((billing / target) * 100) : 0;
   const remaining = Math.max(0, target - billing);
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.md, paddingBottom: 80 }}>
+      <PeriodBar value={period} onChange={setPeriod} />
       <View style={{ alignItems: 'center', paddingVertical: 12 }}>
         <Text style={{ fontFamily: fonts.sansBold, fontSize: 9, letterSpacing: 2.4, textTransform: 'uppercase', color: colors.text3 }}>
           Month-to-date Billing

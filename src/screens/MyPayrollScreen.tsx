@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { colors, fonts, INR, space } from '../theme';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { Pill } from '../components/Pill';
+import { PeriodBar, Period, periodPrefix, periodLabel, periodMonths, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { monthYM } from '../lib/constants';
 import { proRataSalary, staffAdvancesInMonth, staffIncentivesInPeriod } from '../lib/calculations';
 
 export const MyPayrollScreen: React.FC = () => {
@@ -18,19 +18,22 @@ export const MyPayrollScreen: React.FC = () => {
   const settings = useApp(s => s.settings);
 
   const me = staff.find(s => s.id === user.staff_id);
-  const monthStr = monthYM();
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const prefix = periodPrefix(period);
+  const months = useMemo(() => periodMonths(period), [period]);
 
-  const salary = useMemo(() => me ? proRataSalary(me, monthStr, branches, settings, leaves) : 0, [me, branches, settings, leaves, monthStr]);
-  const incentive = useMemo(() => me ? staffIncentivesInPeriod(me.id, entries, monthStr) : 0, [me, entries, monthStr]);
-  const advance = useMemo(() => me ? staffAdvancesInMonth(me.id, monthStr, advances) : 0, [me, advances, monthStr]);
+  const salary = useMemo(() => me ? months.reduce((s, mp) => s + proRataSalary(me, mp, branches, settings, leaves), 0) : 0, [me, branches, settings, leaves, months]);
+  const incentive = useMemo(() => me ? staffIncentivesInPeriod(me.id, entries, prefix) : 0, [me, entries, prefix]);
+  const advance = useMemo(() => me ? months.reduce((s, mp) => s + staffAdvancesInMonth(me.id, mp, advances), 0) : 0, [me, advances, months]);
   const net = salary + incentive - advance;
   const myAdvances = useMemo(() => advances.filter(a => a.staff_id === user.staff_id), [advances, user.staff_id]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.md, paddingBottom: 80 }}>
+      <PeriodBar value={period} onChange={setPeriod} />
       <View style={{ alignItems: 'center', paddingVertical: 12 }}>
         <Text style={{ fontFamily: fonts.sansBold, fontSize: 9, letterSpacing: 2.4, textTransform: 'uppercase', color: colors.text3 }}>
-          Estimated Net Pay · {monthStr}
+          Estimated Net Pay · {periodLabel(period)}
         </Text>
         <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 44, marginTop: 6 }}>{INR(net)}</Text>
       </View>

@@ -140,12 +140,12 @@ export const currentScreen = (s: AppState): Screen => s.history[s.history.length
 export const NAV_BY_ROLE: Record<Role, Screen[]> = {
   admin: [
     'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
-    'menu-config', 'staff', 'staff-performance', 'leaderboard', 'materials', 'material-master', 'daily-expenses', 'op-expenses',
+    'staff', 'staff-performance', 'leaderboard', 'daily-expenses', 'op-expenses',
     'pl', 'leaves', 'payroll', 'taskpedia', 'master-setup',
   ],
   accountant: [
     'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
-    'menu-config', 'staff', 'staff-performance', 'leaderboard', 'materials', 'daily-expenses', 'leaves', 'payroll', 'taskpedia',
+    'staff', 'staff-performance', 'leaderboard', 'daily-expenses', 'leaves', 'payroll', 'taskpedia',
   ],
   employee: ['dashboard', 'day-working', 'my-target', 'my-payroll', 'apply-leave'],
 };

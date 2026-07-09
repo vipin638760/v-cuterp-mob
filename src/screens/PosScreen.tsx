@@ -34,6 +34,7 @@ export const PosScreen: React.FC = () => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [svcSearch, setSvcSearch] = useState('');
   const [busy, setBusy] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [lastInvoice, setLastInvoice] = useState<Invoice | null>(null);
@@ -64,12 +65,20 @@ export const PosScreen: React.FC = () => {
   }, [menus, branchType]);
 
   const visibleMenus = useMemo(() => {
+    const q = svcSearch.trim().toLowerCase();
     return menus.filter(m => {
       if (m.branch_type && m.branch_type !== 'both' && m.branch_type !== branchType) return false;
       if (group !== 'all' && m.group !== group) return false;
+      if (q && !(m.name || '').toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [menus, group, branchType]);
+  }, [menus, group, branchType, svcSearch]);
+
+  const qtyByService = useMemo(() => {
+    const map: Record<string, number> = {};
+    items.forEach(it => { if (it.service_id) map[it.service_id] = (map[it.service_id] || 0) + it.qty; });
+    return map;
+  }, [items]);
 
   const todayStaff = useMemo(() => {
     const today = todayYMD();
@@ -186,31 +195,51 @@ export const PosScreen: React.FC = () => {
           active={branchId}
           onChange={setBranchId}
         />
+        <TextField placeholder="Search services" value={svcSearch} onChangeText={setSvcSearch} />
         <ChipGroup
-          items={groups.map(g => ({ id: g, label: g }))}
+          items={groups.map(g => ({ id: g, label: g === 'all' ? 'All' : g }))}
           active={group}
           onChange={setGroup}
         />
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: space.xl, gap: space.sm }}>
-        {visibleMenus.map(m => (
-          <Pressable key={m.id} onPress={() => addService(m)}>
-            <ListCard>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.text, fontSize: 15 }}>{m.name}</Text>
-                  {m.group && <Text style={{ fontFamily: fonts.sansMedium, color: colors.text3, fontSize: 11, marginTop: 2 }}>{m.group}</Text>}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: space.xl, paddingBottom: items.length ? 12 : 40 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 }}>
+          {visibleMenus.map(m => {
+            const inCart = qtyByService[m.id] || 0;
+            return (
+              <Pressable key={m.id} onPress={() => addService(m)} style={{
+                width: '48%',
+                backgroundColor: inCart ? 'rgba(212,165,116,0.10)' : colors.bg2,
+                borderRadius: radius.lg,
+                borderWidth: 1,
+                borderColor: inCart ? colors.gold2 : colors.line,
+                padding: 13,
+                minHeight: 92,
+                justifyContent: 'space-between',
+              }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.text, fontSize: 14, flex: 1, lineHeight: 18 }} numberOfLines={2}>{m.name}</Text>
+                  {inCart > 0 && (
+                    <View style={{ minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 10, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontFamily: fonts.sansBold, fontSize: 10, color: '#1a1208' }}>{inCart}</Text>
+                    </View>
+                  )}
                 </View>
-                <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 16 }}>{INR(m.price)}</Text>
-                <Icon name="plus" size={18} color={colors.text2} />
-              </View>
-            </ListCard>
-          </Pressable>
-        ))}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                  <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 16 }}>{INR(m.price)}</Text>
+                  <View style={{ width: 24, height: 24, borderRadius: 8, backgroundColor: colors.bg3, borderWidth: 1, borderColor: colors.line2, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="plus" size={14} color={colors.gold} />
+                  </View>
+                </View>
+                {!!m.group && <Text style={{ fontFamily: fonts.sansMedium, color: colors.text4, fontSize: 9, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 4 }}>{m.group}</Text>}
+              </Pressable>
+            );
+          })}
+        </View>
         {visibleMenus.length === 0 && (
           <Text style={{ fontFamily: fonts.sansMedium, color: colors.text3, textAlign: 'center', paddingVertical: 24 }}>
-            No services for this branch type
+            {svcSearch ? 'No services match' : 'No services for this branch type'}
           </Text>
         )}
       </ScrollView>

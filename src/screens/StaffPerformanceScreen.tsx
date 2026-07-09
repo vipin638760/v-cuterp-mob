@@ -5,8 +5,9 @@ import { ListCard } from '../components/ListCard';
 import { Pill } from '../components/Pill';
 import { Icon } from '../components/Icon';
 import { TextField } from '../components/TextField';
+import { PeriodBar, Period, periodPrefix, periodLabel, currentPeriod } from '../components/PeriodBar';
 import { useApp } from '../store';
-import { MONTHS, monthYM } from '../lib/constants';
+import { MONTHS } from '../lib/constants';
 import { proRataSalary, staffBillingInPeriod, staffIncentivesInPeriod, staffStatusForMonth } from '../lib/calculations';
 
 type Show = 'all' | 'active' | 'inactive';
@@ -46,9 +47,10 @@ export const StaffPerformanceScreen: React.FC = () => {
   const push = useApp(s => s.push);
 
   const isAdmin = user?.role === 'admin';
-  const monthStr = monthYM();
-  const [yr, mo] = monthStr.split('-').map(Number);
-  const monthLabel = `${MONTHS[mo - 1]} ${yr}`;
+  const [period, setPeriod] = useState<Period>(currentPeriod());
+  const prefix = periodPrefix(period);
+  const pLabel = periodLabel(period);
+  const pShort = period.mode === 'year' ? String(period.year) : MONTHS[period.month - 1];
 
   const [q, setQ] = useState('');
   const [show, setShow] = useState<Show>('active');
@@ -56,19 +58,30 @@ export const StaffPerformanceScreen: React.FC = () => {
   const [tgtF, setTgtF] = useState<Tgt>('all');
   const [sortCol, setSortCol] = useState<Sort>('billing');
 
+  // Months covered by the selected period (1 for month mode; Jan..refMonth for year).
+  const months = useMemo(() => {
+    if (period.mode === 'month') return [prefix];
+    const now = new Date();
+    const last = period.year < now.getFullYear() ? 12 : now.getMonth() + 1;
+    return Array.from({ length: last }, (_, i) => `${period.year}-${String(i + 1).padStart(2, '0')}`);
+  }, [period, prefix]);
+
   const rows = useMemo(() => staff.map(s => {
-    const status = staffStatusForMonth(s, monthStr).status;
-    const billing = staffBillingInPeriod(s.id, entries, monthStr);
-    const incentive = staffIncentivesInPeriod(s.id, entries, monthStr);
-    const salary = proRataSalary(s, monthStr, branches, settings, leaves);
-    const salaryFull = status !== 'inactive' ? (Number(s.salary) || 0) : 0;
+    const billing = staffBillingInPeriod(s.id, entries, prefix);
+    const incentive = staffIncentivesInPeriod(s.id, entries, prefix);
+    let salary = 0, salaryFull = 0, activeAny = false;
+    months.forEach(mp => {
+      salary += proRataSalary(s, mp, branches, settings, leaves);
+      if (staffStatusForMonth(s, mp).status !== 'inactive') { salaryFull += Number(s.salary) || 0; activeAny = true; }
+    });
+    const status = activeAny ? 'active' : 'inactive';
     const tgt = Math.round(salary * 3); // 3× pro-rata salary
     const pct = tgt > 0 ? Math.round((billing / tgt) * 100) : 0;
     const shortfall = Math.max(0, tgt - billing);
     const branch = branches.find(b => b.id === s.branch_id);
     const btype = (branch?.type || 'mens').toLowerCase();
     return { s, status, billing, incentive, salary, salaryFull, tgt, pct, shortfall, branch, btype };
-  }), [staff, entries, branches, settings, leaves, monthStr]);
+  }), [staff, entries, branches, settings, leaves, prefix, months]);
 
   const isMet = (r: typeof rows[number]) => r.tgt > 0 && r.shortfall === 0;
   const isNotMet = (r: typeof rows[number]) => r.tgt > 0 && r.shortfall > 0;
@@ -133,14 +146,16 @@ export const StaffPerformanceScreen: React.FC = () => {
       <View>
         <Text style={{ fontFamily: fonts.serifSemiBold, fontSize: 24, color: colors.text }}>Staff Performance</Text>
         <Text style={{ fontFamily: fonts.sansMedium, fontSize: 12, color: colors.text3, marginTop: 2 }}>
-          Per-stylist billing, incentives &amp; payroll · {monthLabel}
+          Per-stylist billing, incentives &amp; payroll · {pLabel}
         </Text>
       </View>
 
+      <PeriodBar value={period} onChange={setPeriod} />
+
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 }}>
         <Kpi label="Total Staff" value={String(kpi.total)} />
-        <Kpi label="Active" value={String(kpi.active)} sub={`in ${MONTHS[mo - 1]}`} tone={colors.green} />
-        <Kpi label="Inactive" value={String(kpi.inactive)} sub={`in ${MONTHS[mo - 1]}`} tone={colors.red} />
+        <Kpi label="Active" value={String(kpi.active)} sub={`in ${pShort}`} tone={colors.green} />
+        <Kpi label="Inactive" value={String(kpi.inactive)} sub={`in ${pShort}`} tone={colors.red} />
         <Kpi label="Total Billing" value={INR(kpi.billing)} tone={colors.gold} />
         <Kpi label="Total Incentive" value={INR(kpi.incentive)} tone={colors.gold} />
         {isAdmin && <Kpi label="Total Salary" value={INR(kpi.salary)} sub="after proration" />}

@@ -9,6 +9,8 @@ export type Screen =
   | 'staff-detail'
   | 'staff-performance'
   | 'leaderboard'
+  | 'attendance'
+  | 'request-advance'
   | 'pos'
   | 'entry'
   | 'pl'
@@ -147,7 +149,7 @@ export const NAV_BY_ROLE: Record<Role, Screen[]> = {
     'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
     'staff', 'staff-performance', 'leaderboard', 'daily-expenses', 'leaves', 'payroll', 'taskpedia',
   ],
-  employee: ['dashboard', 'day-working', 'my-target', 'my-payroll', 'apply-leave'],
+  employee: ['dashboard', 'attendance', 'day-working', 'my-target', 'my-payroll', 'request-advance', 'apply-leave'],
 };
 
 export const SCREEN_TITLES: Record<Screen, string> = {
@@ -158,6 +160,8 @@ export const SCREEN_TITLES: Record<Screen, string> = {
   'staff-detail': 'Staff Insight',
   'staff-performance': 'Staff Performance',
   leaderboard: 'Leaderboard',
+  attendance: 'Attendance',
+  'request-advance': 'Request Advance',
   pos: 'POS Terminal',
   entry: 'Daily Business Entry',
   pl: 'P&L Analytics',

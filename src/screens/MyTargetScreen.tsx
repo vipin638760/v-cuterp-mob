@@ -28,6 +28,19 @@ export const MyTargetScreen: React.FC = () => {
   const pct = target > 0 ? Math.round((billing / target) * 100) : 0;
   const remaining = Math.max(0, target - billing);
 
+  // Branch teammates' targets (same shop).
+  const peers = useMemo(() => {
+    if (!me) return [];
+    return staff
+      .filter(s => s.branch_id === me.branch_id && (!s.exit_date || s.exit_date >= prefix.slice(0, 7) + '-01'))
+      .map(s => {
+        const b = staffBillingInPeriod(s.id, entries, prefix);
+        const p = target > 0 ? Math.round((b / target) * 100) : 0;
+        return { s, billing: b, pct: p, isMe: s.id === me.id };
+      })
+      .sort((a, x) => x.billing - a.billing);
+  }, [staff, me, entries, prefix, target]);
+
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.md, paddingBottom: 80 }}>
       <PeriodBar value={period} onChange={setPeriod} />
@@ -53,6 +66,34 @@ export const MyTargetScreen: React.FC = () => {
         <StatCard label="Forecast Incentive" value={INR(incentive)} tone="gold" />
         <StatCard label="Days Left" value={String(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate())} tone="neutral" />
       </View>
+
+      {peers.length > 1 && (
+        <View>
+          <Text style={{ fontFamily: fonts.sansBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: colors.text3, marginBottom: 8 }}>
+            Branch Team · {branch?.name || ''}
+          </Text>
+          <View style={{ gap: 6 }}>
+            {peers.map(({ s, billing: b, pct: p, isMe }) => (
+              <ListCard key={s.id}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: fonts.serifSemiBold, color: isMe ? colors.gold : colors.text, fontSize: 14 }}>
+                      {s.name}{isMe ? ' · you' : ''}
+                    </Text>
+                    <View style={{ width: '80%', height: 5, borderRadius: 3, backgroundColor: colors.bg4, overflow: 'hidden', marginTop: 4 }}>
+                      <View style={{ height: 5, width: `${Math.min(100, p)}%`, borderRadius: 3, backgroundColor: p >= 100 ? colors.green : colors.gold }} />
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 13 }}>{INR(b)}</Text>
+                    <Text style={{ fontFamily: fonts.sansBold, fontSize: 9, color: p >= 100 ? colors.green : colors.text3 }}>{p}%</Text>
+                  </View>
+                </View>
+              </ListCard>
+            ))}
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 };

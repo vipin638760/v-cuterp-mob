@@ -23,6 +23,7 @@ export const DayWorkingScreen: React.FC = () => {
   const today = todayYMD();
   const [service, setService] = useState('');
   const [amount, setAmount] = useState('');
+  const [payMode, setPayMode] = useState<'cash' | 'online' | 'card'>('cash');
   const [busy, setBusy] = useState(false);
 
   const myInvoices = useMemo(() =>
@@ -54,6 +55,7 @@ export const DayWorkingScreen: React.FC = () => {
         date: today,
         service_name: service.trim(),
         amount: Number(amount) || 0,
+        payment_mode: payMode,
         source: 'manual',
       });
       setService(''); setAmount('');
@@ -75,6 +77,20 @@ export const DayWorkingScreen: React.FC = () => {
         <View style={{ gap: 10 }}>
           <TextField label="Service" value={service} onChangeText={setService} placeholder="e.g. haircut" />
           <TextField label="Amount" value={amount} onChangeText={setAmount} keyboardType="number-pad" />
+          <View style={{ gap: 5 }}>
+            <Text style={{ fontFamily: fonts.sansBold, fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase', color: colors.text3 }}>Payment</Text>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              {(['cash', 'online', 'card'] as const).map(m => (
+                <Pressable key={m} onPress={() => setPayMode(m)} style={{
+                  flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8, borderWidth: 1,
+                  borderColor: payMode === m ? colors.gold : colors.line2,
+                  backgroundColor: payMode === m ? 'rgba(212,165,116,0.18)' : colors.bg3,
+                }}>
+                  <Text style={{ fontFamily: fonts.sansBold, fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: payMode === m ? colors.gold : colors.text2 }}>{m}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
           <PrimaryButton label={busy ? 'Saving…' : 'Log Service'} onPress={log} disabled={busy} icon="plus" fullWidth />
         </View>
       </ListCard>

@@ -9,6 +9,8 @@ import { BranchDetailScreen } from './screens/BranchDetailScreen';
 import { StaffDetailScreen } from './screens/StaffDetailScreen';
 import { LeaderboardScreen } from './screens/LeaderboardScreen';
 import { StaffPerformanceScreen } from './screens/StaffPerformanceScreen';
+import { AttendanceScreen } from './screens/AttendanceScreen';
+import { RequestAdvanceScreen } from './screens/RequestAdvanceScreen';
 import { PosScreen } from './screens/PosScreen';
 import { EntryScreen } from './screens/EntryScreen';
 import { PLScreen } from './screens/PLScreen';
@@ -40,6 +42,8 @@ const screenComponent = (s: Screen): React.ReactNode => {
     case 'staff-detail': return <StaffDetailScreen />;
     case 'leaderboard': return <LeaderboardScreen />;
     case 'staff-performance': return <StaffPerformanceScreen />;
+    case 'attendance': return <AttendanceScreen />;
+    case 'request-advance': return <RequestAdvanceScreen />;
     case 'pos': return <PosScreen />;
     case 'entry': return <EntryScreen />;
     case 'pl': return <PLScreen />;

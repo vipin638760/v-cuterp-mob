@@ -13,6 +13,8 @@ const SCREEN_ICONS: Partial<Record<Screen, IconName>> = {
   'staff-detail': 'users',
   'staff-performance': 'trending',
   leaderboard: 'star',
+  attendance: 'check-circle',
+  'request-advance': 'wallet',
   pos: 'shopping-bag',
   entry: 'edit',
   pl: 'pie',

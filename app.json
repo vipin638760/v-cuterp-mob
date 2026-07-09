@@ -6,7 +6,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "vcut",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash-icon.png",
       "backgroundColor": "#0a0806",
       "resizeMode": "contain"
     },
@@ -14,6 +16,7 @@
       "package": "com.vcut.luxe",
       "versionCode": 1,
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0806"
       },
       "permissions": ["INTERNET"]
@@ -23,7 +26,8 @@
       "supportsTablet": false
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font"

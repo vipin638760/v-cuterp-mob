@@ -1,7 +1,42 @@
-import type { Branch, DailyEntry, Leave, PayrollAdvance, Staff, Transfer, GlobalSettings, MonthlyExpense } from './types';
+import type { Branch, DailyEntry, ExpenseEntry, Leave, PayrollAdvance, Staff, Transfer, GlobalSettings, MonthlyExpense } from './types';
 
 export const parseLocalDate = (ymd?: string | null): Date | null =>
   ymd ? new Date(ymd + 'T00:00') : null;
+
+export interface BranchFinancials {
+  revenue: number; fixed: number; variable: number; gst: number; salary: number; net: number;
+}
+
+// Single source of truth for a branch's month P&L, mirroring the web ERP:
+// net = collection − variable − fixed − GST(on online) − salary.
+export function branchFinancials(
+  b: Branch,
+  monthStr: string,
+  entries: DailyEntry[],
+  expenses: ExpenseEntry[],
+  monthlyExpenses: MonthlyExpense[],
+  staff: Staff[],
+  settings: GlobalSettings,
+  leaves: Leave[],
+  includeSalary = true,
+): BranchFinancials {
+  const revenue = branchIncomeInPeriod(b.id, entries, monthStr);
+  const fx = getMonthlyFixed(b, monthStr, monthlyExpenses);
+  const fixed = Object.values(fx).reduce((s, v) => s + (v || 0), 0);
+  const variable = expenses
+    .filter(e => e.branch_id === b.id && e.date && e.date.startsWith(monthStr))
+    .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const online = entries
+    .filter(e => e.branch_id === b.id && e.date && e.date.startsWith(monthStr))
+    .reduce((s, e) => s + (Number((e as any).online) || 0), 0);
+  const gst = Math.round(online * (settings.gst_pct || 0) / 100);
+  const salary = includeSalary
+    ? staff.filter(st => st.branch_id === b.id)
+        .reduce((s, st) => s + proRataSalary(st, monthStr, [b], settings, leaves), 0)
+    : 0;
+  const net = revenue - variable - fixed - gst - salary;
+  return { revenue, fixed, variable, gst, salary, net };
+}
 
 export function getMonthlyFixed(branch: Branch | null | undefined, monthStr: string, monthlyExpenses: MonthlyExpense[] = []) {
   const b: any = branch || {};

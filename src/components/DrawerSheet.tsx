@@ -8,6 +8,8 @@ import { clearSession } from '../lib/session';
 
 const SCREEN_ICONS: Partial<Record<Screen, IconName>> = {
   dashboard: 'home',
+  pulse: 'trending',
+  'branch-detail': 'briefcase',
   pos: 'shopping-bag',
   entry: 'edit',
   pl: 'pie',

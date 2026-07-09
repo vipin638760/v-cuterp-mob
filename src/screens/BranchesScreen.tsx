@@ -1,40 +1,35 @@
 import React, { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View, Pressable } from 'react-native';
 import { colors, fonts, INR, radius, space } from '../theme';
-import { ListCard } from '../components/ListCard';
 import { Pill } from '../components/Pill';
 import { Icon } from '../components/Icon';
 import { useApp } from '../store';
 import { monthYM } from '../lib/constants';
-import { branchIncomeInPeriod, getMonthlyFixed } from '../lib/calculations';
+import { branchFinancials } from '../lib/calculations';
 
 export const BranchesScreen: React.FC = () => {
   const branches = useApp(s => s.branches);
+  const staff = useApp(s => s.staff);
   const entries = useApp(s => s.entries);
   const expenses = useApp(s => s.expenses);
   const monthlyExpenses = useApp(s => s.monthlyExpenses);
   const settings = useApp(s => s.settings);
+  const leaves = useApp(s => s.leaves);
+  const setSelectedBranch = useApp(s => s.setSelectedBranch);
+  const push = useApp(s => s.push);
   const monthStr = monthYM();
 
   const rows = useMemo(() => branches.map(b => {
-    const revenue = branchIncomeInPeriod(b.id, entries, monthStr);
-    const fx = getMonthlyFixed(b, monthStr, monthlyExpenses);
-    const fixed = Object.values(fx).reduce((s, v) => s + (v || 0), 0);
-    const variable = expenses
-      .filter(e => e.branch_id === b.id && e.date && e.date.startsWith(monthStr))
-      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
-    const onlinePart = entries
-      .filter(e => e.branch_id === b.id && e.date && e.date.startsWith(monthStr))
-      .reduce((s, e) => s + (Number((e as any).online) || 0), 0);
-    const gst = Math.round(onlinePart * (settings.gst_pct || 0) / 100);
-    const n = revenue - variable - fixed - gst;
-    return { branch: b, revenue, n };
-  }), [branches, entries, expenses, monthlyExpenses, settings.gst_pct, monthStr]);
+    const { revenue, net } = branchFinancials(b, monthStr, entries, expenses, monthlyExpenses, staff, settings, leaves);
+    return { branch: b, revenue, n: net };
+  }).sort((a, b) => b.n - a.n), [branches, staff, entries, expenses, monthlyExpenses, settings, leaves, monthStr]);
+
+  const go = (id: string) => { setSelectedBranch(id); push('branch-detail'); };
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.md, paddingBottom: 80 }}>
       {rows.map(({ branch: b, revenue, n }) => (
-        <View key={b.id} style={{
+        <Pressable key={b.id} onPress={() => go(b.id)} style={{
           backgroundColor: colors.bg2,
           borderRadius: radius.xl,
           padding: 16,
@@ -52,6 +47,7 @@ export const BranchesScreen: React.FC = () => {
               </Text>
             </View>
             <Pill tone={n > 0 ? 'green' : 'red'} text={n > 0 ? 'PROFIT' : 'LOSS'} />
+            <Icon name="chevron-right" size={16} color={colors.text4} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
             <View>
@@ -63,7 +59,7 @@ export const BranchesScreen: React.FC = () => {
               <Text style={{ fontFamily: fonts.serifSemiBold, color: n > 0 ? colors.green : colors.red, fontSize: 18 }}>{INR(n)}</Text>
             </View>
           </View>
-        </View>
+        </Pressable>
       ))}
     </ScrollView>
   );

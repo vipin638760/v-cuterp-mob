@@ -4,6 +4,8 @@ import type { Branch, Customer, DailyEntry, ExpenseEntry, Leave, Material, MenuI
 export type Screen =
   | 'login'
   | 'dashboard'
+  | 'pulse'
+  | 'branch-detail'
   | 'pos'
   | 'entry'
   | 'pl'
@@ -130,12 +132,12 @@ export const currentScreen = (s: AppState): Screen => s.history[s.history.length
 
 export const NAV_BY_ROLE: Record<Role, Screen[]> = {
   admin: [
-    'dashboard', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
+    'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
     'menu-config', 'staff', 'materials', 'material-master', 'daily-expenses', 'op-expenses',
     'pl', 'leaves', 'payroll', 'taskpedia', 'master-setup',
   ],
   accountant: [
-    'dashboard', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
+    'dashboard', 'pulse', 'branches', 'cash-collection', 'incentive', 'entry', 'pos', 'customers',
     'menu-config', 'staff', 'materials', 'daily-expenses', 'leaves', 'payroll', 'taskpedia',
   ],
   employee: ['dashboard', 'day-working', 'my-target', 'my-payroll', 'apply-leave'],
@@ -144,6 +146,8 @@ export const NAV_BY_ROLE: Record<Role, Screen[]> = {
 export const SCREEN_TITLES: Record<Screen, string> = {
   login: 'Sign In',
   dashboard: 'Dashboard',
+  pulse: 'Organisation Pulse',
+  'branch-detail': 'Branch Insight',
   pos: 'POS Terminal',
   entry: 'Daily Business Entry',
   pl: 'P&L Analytics',

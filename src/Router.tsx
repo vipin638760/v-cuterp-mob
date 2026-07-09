@@ -6,6 +6,7 @@ import { LoginScreen } from './screens/LoginScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { OrgPulseScreen } from './screens/OrgPulseScreen';
 import { BranchDetailScreen } from './screens/BranchDetailScreen';
+import { StaffDetailScreen } from './screens/StaffDetailScreen';
 import { PosScreen } from './screens/PosScreen';
 import { EntryScreen } from './screens/EntryScreen';
 import { PLScreen } from './screens/PLScreen';
@@ -34,6 +35,7 @@ const screenComponent = (s: Screen): React.ReactNode => {
     case 'dashboard': return <DashboardScreen />;
     case 'pulse': return <OrgPulseScreen />;
     case 'branch-detail': return <BranchDetailScreen />;
+    case 'staff-detail': return <StaffDetailScreen />;
     case 'pos': return <PosScreen />;
     case 'entry': return <EntryScreen />;
     case 'pl': return <PLScreen />;

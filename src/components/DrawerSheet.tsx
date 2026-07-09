@@ -10,6 +10,7 @@ const SCREEN_ICONS: Partial<Record<Screen, IconName>> = {
   dashboard: 'home',
   pulse: 'trending',
   'branch-detail': 'briefcase',
+  'staff-detail': 'users',
   pos: 'shopping-bag',
   entry: 'edit',
   pl: 'pie',

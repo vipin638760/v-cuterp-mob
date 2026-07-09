@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View, Pressable } from 'react-native';
 import { colors, fonts, INR, radius, space } from '../theme';
 import { ListCard } from '../components/ListCard';
 import { Pill } from '../components/Pill';
+import { Icon } from '../components/Icon';
 import { ChipGroup } from '../components/ChipGroup';
 import { TextField } from '../components/TextField';
 import { useApp } from '../store';
@@ -21,6 +22,8 @@ export const StaffScreen: React.FC = () => {
   const branches = useApp(s => s.branches);
   const entries = useApp(s => s.entries);
   const transfers = useApp(s => s.transfers);
+  const setSelectedStaff = useApp(s => s.setSelectedStaff);
+  const push = useApp(s => s.push);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('all');
   const today = todayYMD();
@@ -55,7 +58,8 @@ export const StaffScreen: React.FC = () => {
       </View>
       <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.sm, paddingBottom: 80 }}>
         {rows.map(({ st, billing, home, at, loan }) => (
-          <ListCard key={st.id}>
+          <Pressable key={st.id} onPress={() => { setSelectedStaff(st.id); push('staff-detail'); }}>
+          <ListCard>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{
                 width: 44, height: 44, borderRadius: radius.md,
@@ -80,8 +84,10 @@ export const StaffScreen: React.FC = () => {
                 <Text style={{ fontFamily: fonts.sansBold, fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase', color: colors.text3 }}>MTD</Text>
                 <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 14 }}>{INR(billing)}</Text>
               </View>
+              <Icon name="chevron-right" size={16} color={colors.text4} />
             </View>
           </ListCard>
+          </Pressable>
         ))}
       </ScrollView>
     </View>

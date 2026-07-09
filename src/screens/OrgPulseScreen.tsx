@@ -37,6 +37,7 @@ export const OrgPulseScreen: React.FC = () => {
   const settings = useApp(s => s.settings);
   const leaves = useApp(s => s.leaves);
   const setSelectedBranch = useApp(s => s.setSelectedBranch);
+  const setSelectedStaff = useApp(s => s.setSelectedStaff);
   const push = useApp(s => s.push);
 
   const monthStr = monthYM();
@@ -134,7 +135,8 @@ export const OrgPulseScreen: React.FC = () => {
           {data.stylists.map(({ st, billing }, i) => {
             const branch = branches.find(b => b.id === st.branch_id);
             return (
-              <ListCard key={st.id}>
+              <Pressable key={st.id} onPress={() => { setSelectedStaff(st.id); push('staff-detail'); }}>
+              <ListCard>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{
                     width: 30, height: 30, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center',
@@ -147,8 +149,10 @@ export const OrgPulseScreen: React.FC = () => {
                     <Text style={{ fontFamily: fonts.sansMedium, color: colors.text3, fontSize: 11 }}>{branch?.name || st.branch_id}</Text>
                   </View>
                   <Text style={{ fontFamily: fonts.serifSemiBold, color: colors.gold, fontSize: 14 }}>{INR(billing)}</Text>
+                  <Icon name="chevron-right" size={16} color={colors.text4} />
                 </View>
               </ListCard>
+              </Pressable>
             );
           })}
         </View>

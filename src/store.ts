@@ -6,6 +6,7 @@ export type Screen =
   | 'dashboard'
   | 'pulse'
   | 'branch-detail'
+  | 'staff-detail'
   | 'pos'
   | 'entry'
   | 'pl'
@@ -35,6 +36,7 @@ interface AppState {
   notificationsOpen: boolean;
   history: Screen[];
   selectedBranchId: string | null;
+  selectedStaffId: string | null;
   toast: { tone: 'gold' | 'green' | 'red' | 'orange'; text: string } | null;
 
   branches: Branch[];
@@ -60,6 +62,7 @@ interface AppState {
   pop: () => void;
   replace: (s: Screen) => void;
   setSelectedBranch: (id: string | null) => void;
+  setSelectedStaff: (id: string | null) => void;
   setToast: (t: AppState['toast']) => void;
 
   setBranches: (v: Branch[]) => void;
@@ -85,6 +88,7 @@ export const useApp = create<AppState>((set) => ({
   notificationsOpen: false,
   history: ['dashboard'],
   selectedBranchId: null,
+  selectedStaffId: null,
   toast: null,
 
   branches: [],
@@ -110,6 +114,7 @@ export const useApp = create<AppState>((set) => ({
   pop: () => set((st) => ({ history: st.history.length > 1 ? st.history.slice(0, -1) : st.history })),
   replace: (s) => set({ history: [s], drawerOpen: false }),
   setSelectedBranch: (id) => set({ selectedBranchId: id }),
+  setSelectedStaff: (id) => set({ selectedStaffId: id }),
   setToast: (t) => set({ toast: t }),
 
   setBranches: (v) => set({ branches: v }),
@@ -148,6 +153,7 @@ export const SCREEN_TITLES: Record<Screen, string> = {
   dashboard: 'Dashboard',
   pulse: 'Organisation Pulse',
   'branch-detail': 'Branch Insight',
+  'staff-detail': 'Staff Performance',
   pos: 'POS Terminal',
   entry: 'Daily Business Entry',
   pl: 'P&L Analytics',
